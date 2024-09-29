@@ -1,8 +1,9 @@
 import sys
 
-from game import game
+from game import Game
 
-debug_mode = "debug" in sys.argv
+debug = "debug" in sys.argv
 
 if __name__ == "__main__":
+    game = Game(debug)
     game.run()
