@@ -13,6 +13,7 @@ class Game():
         self.clock = pygame.time.Clock()
         
         self.sprites = pygame.sprite.Group()
+        self.collision_sprites = pygame.sprite.Group()
         
         self.setup()
 
@@ -23,7 +24,7 @@ class Game():
                     y = row_idx * Config.TILE_SIZE
                     x = col_idx * Config.TILE_SIZE
                 
-                    Tile((x, y), self.sprites)
+                    Tile((x, y), [self.sprites, self.collision_sprites])
         
         for row_idx, row in enumerate(Config.LAYOUT):
             for col_idx, col in enumerate(row):
@@ -31,7 +32,7 @@ class Game():
                     y = row_idx * Config.TILE_SIZE
                     x = col_idx * Config.TILE_SIZE
                 
-                    self.player = Player((x, y), self.sprites)
+                    self.player = Player((x, y), self.sprites, self.collision_sprites)
 
     def run(self, debug):
         if debug:
