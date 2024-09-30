@@ -15,7 +15,7 @@ class Player(pygame.sprite.Sprite):
         # Sprite variables                                                 
         self.image = pygame.Surface((32, 32))
         self.image.fill((Config.RED))
-        self.rect = self.image.get_frect(center = pos) 
+        self.rect = self.image.get_frect(topleft = pos) 
         
         # Movement variables
         self.input_vec = vec()

@@ -1,21 +1,42 @@
 from .config import Config
 from .player import Player
+from .sprites import Tile
 
 import pygame, sys
 
 class Game():
     
-    def __init__(self, debug):
-        self.debug = debug
+    def __init__(self):
         pygame.init()
         pygame.display.set_caption(Config.GAME_TITLE)
         self.screen = pygame.display.set_mode(Config.WINDOW_SIZE)
         self.clock = pygame.time.Clock()
         
         self.sprites = pygame.sprite.Group()
-        self.player = Player((Config.WINDOW_SIZE[0]//2, Config.WINDOW_SIZE[1]//2), self.sprites)
+        
+        self.setup()
 
-    def run(self):
+    def setup(self):
+        for row_idx, row in enumerate(Config.LAYOUT):
+            for col_idx, col in enumerate(row):
+                if col == 1:
+                    y = row_idx * Config.TILE_SIZE
+                    x = col_idx * Config.TILE_SIZE
+                
+                    Tile((x, y), self.sprites)
+        
+        for row_idx, row in enumerate(Config.LAYOUT):
+            for col_idx, col in enumerate(row):
+                if col == 2:
+                    y = row_idx * Config.TILE_SIZE
+                    x = col_idx * Config.TILE_SIZE
+                
+                    self.player = Player((x, y), self.sprites)
+
+    def run(self, debug):
+        if debug:
+            print("Debug mode.")
+        
         while True:
             dt = self.clock.tick(Config.FPS) / 1000
             for event in pygame.event.get():
