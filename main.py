@@ -1,6 +1,6 @@
 import sys
 
-from game import game
+from source import game
 
 debug = "debug" in sys.argv
 

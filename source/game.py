@@ -32,7 +32,11 @@ class Game():
                     y = row_idx * Config.TILE_SIZE
                     x = col_idx * Config.TILE_SIZE
                 
-                    self.player = Player((x, y), self.sprites, self.collision_sprites)
+                    self.player = Player(
+                        pos=(x, y), 
+                        groups=self.sprites, 
+                        frames=None,
+                        collision_sprites=self.collision_sprites)
 
     def run(self, debug):
         if debug:
