@@ -1,4 +1,4 @@
-from .config import Config
+from .config import Config, PlayerStates
 
 
 import pygame
@@ -9,53 +9,34 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos, groups, frames, collision_sprites):
         super().__init__(groups)
         
-        # Input control
+        # Input
         self.input_disabled = False
         
-        # Player state
-        self.state = "idle"    
-        self.facing = "right"
-
-        self.image = frames[self.state][self.facing][0]
-        self.rect = self.image.get_frect(topleft = pos)
-        self.hitbox = self.rect.inflate(-32,-16)
-        
-        # Components
-        self.movement = PlayerMovement(self, collision_sprites)
-        self.animation = PlayerAnimation(self, frames)
-
-    def update(self, dt):
-        self.prev_rect = self.rect.copy()
-        
-        self.movement.move(dt)
-        self.animation.animate(dt)
-    
-class PlayerMovement:
-    
-    def __init__(self, player, collision_sprites):
-        self.player = player
-        self.collision_sprites = collision_sprites
-        
-        self.hitbox = self.player.hitbox
-        
-        self.speed = Config.PLAYER_RUN_SPEED
+        # Movement
         self.direction = vec()
         self.velocity = vec()
         
+        self.c_sprites = collision_sprites
+        
+        self.speed = Config.PLAYER_RUN_SPEED
         self.ground = False
         self.crouch = False
+        self.jump = False     
+         
+        # Player state & Animation
+        self.states = PlayerStates()
         
-        self.jump = False
+        self.state = self.states.IDLE
+        self.prev_state = self.states.IDLE
         
-        self.facing = "right"
-        self.state = "idle"
+        self.facing = "left"
+        self.frames = frames
+        self.frame_idx = 0
         
-    def check_contact(self):
-        ground_rect = pygame.Rect(self.hitbox.bottomleft, (self.hitbox.width, 2))
-        # list of rectangles of all collision objects
-        collide_rects = [sprite.rect for sprite in self.collision_sprites]
-        # rect beneath player rectangle
-        self.ground = True if ground_rect.collidelist(collide_rects) >= 0 else False
+        # Sprite
+        self.image = frames[self.state.name][self.facing][0]
+        self.rect = self.image.get_frect(topleft = pos)
+        self.hitbox = self.rect.inflate(-32,-16)
         
     def input(self):
         input_vec = vec()
@@ -71,53 +52,6 @@ class PlayerMovement:
             
         # set player direction
         self.direction.x = input_vec.normalize().x if input_vec else 0
-        
-    def check_collision(self, axis):
-        for sprite in self.collision_sprites:
-            if sprite.rect.colliderect(self.hitbox):
-                # Horizontal collision
-                if axis == "h":
-                    if self.velocity.x > 0:
-                        self.hitbox.right = sprite.rect.left
-                    elif self.velocity.x < 0:
-                        self.hitbox.left = sprite.rect.right
-                        
-                    self.velocity.x = 0
-
-                # Vertical collision
-                elif axis == "v":
-                    if self.velocity.y > 0:
-                        self.hitbox.bottom = sprite.rect.top
-                    elif self.velocity.y < 0:
-                        self.hitbox.top = sprite.rect.bottom
-
-                    self.velocity.y = 0
-                    
-    def states(self):
-        if self.direction.x < 0:
-            self.facing = "left"
-        elif self.direction.x > 0:
-            self.facing = "right"
-            
-        if self.ground:
-            if self.crouch:
-                self.state = "crouch"
-            elif self.jump:
-                self.state = "jump"
-            else:
-                if self.direction.x == 0:
-                    self.state = "idle"
-                else:
-                    self.state = "run"
-        elif not self.ground:
-            if self.velocity.y <= 0:
-                self.state = "jump"
-            elif self.velocity.y > 0:
-                self.state = "fall"
-        
-    def set_state(self):
-        self.player.facing = self.facing
-        self.player.state = self.state
         
     def move(self, dt):
         # check initial game state
@@ -139,34 +73,72 @@ class PlayerMovement:
         
         self.hitbox.y += self.velocity.y * dt
         self.check_collision("v")
-        
-        self.states()
-        self.set_state()
         # update player rect according to hitbox movement
-        self.player.rect.center = self.hitbox.center
-                       
-class PlayerAnimation:
-    
-    def __init__(self, player, frames):
-        self.player = player
-        self.frames = frames
-        self.frame_idx = 0
+        self.rect.center = self.hitbox.center
         
-        self.animation_speed = Config.ANIMATION_SPEED
+    def check_contact(self):
+        ground_rect = pygame.Rect(self.hitbox.bottomleft, (self.hitbox.width, 2))
+        # list of rectangles of all collision objects
+        collide_rects = [sprite.rect for sprite in self.c_sprites]
+        # rect beneath player rectangle
+        self.ground = True if ground_rect.collidelist(collide_rects) >= 0 else False
         
-        self.prev_state = "idle"
-        self.one_time_states = ["jump", "fall"]
+    def check_collision(self, axis):
+        for sprite in self.c_sprites:
+            if sprite.rect.colliderect(self.hitbox):
+                # Horizontal collision
+                if axis == "h":
+                    if self.velocity.x > 0:
+                        self.hitbox.right = sprite.rect.left
+                    elif self.velocity.x < 0:
+                        self.hitbox.left = sprite.rect.right
+                        
+                    self.velocity.x = 0
+
+                # Vertical collision
+                elif axis == "v":
+                    if self.velocity.y > 0:
+                        self.hitbox.bottom = sprite.rect.top
+                    elif self.velocity.y < 0:
+                        self.hitbox.top = sprite.rect.bottom
+
+                    self.velocity.y = 0
         
-    def animate(self, dt):
-        state, facing = self.player.state, self.player.facing
-        image = self.player.image
-        if state == self.prev_state and state in self.one_time_states:
-            pass
+    def check_state(self):
+        if self.direction.x < 0:
+            self.facing = "left"
+        elif self.direction.x > 0:
+            self.facing = "right"
             
+        if self.ground:
+            if self.crouch:
+                self.state = self.states.CROUCH
+            else:
+                if self.direction.x == 0:
+                    self.state = self.states.IDLE
+                else:
+                    self.state = self.states.RUN
+        elif not self.ground:
+            if self.velocity.y <= 0:
+                self.state = self.states.JUMP
+            elif self.velocity.y > 0:
+                self.state = self.states.FALL
+                
+    def animate(self, dt):
+        current_frames = self.frames[self.state.name][self.facing]
+        if self.state.loop:
+            self.frame_idx += self.state.anim_speed * dt   
         else:
-            self.frame_idx += self.animation_speed * dt
-            current_frames = self.frames[state][facing]
-            image = current_frames[int(self.frame_idx % len(current_frames))]
+            if self.prev_state != self.state:
+                self.frame_idx = 0
+            else:
+                self.frame_idx = self.frame_idx + self.state.anim_speed * dt if self.frame_idx <= len(current_frames)-1 else self.frame_idx
+                
+        self.image = current_frames[int(self.frame_idx % len(current_frames))]
+        self.prev_state = self.state
         
-        self.prev_state = state
-        self.player.image = image
+    def update(self, dt):
+        self.input()
+        self.move(dt)
+        self.check_state()
+        self.animate(dt)

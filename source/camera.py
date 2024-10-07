@@ -21,8 +21,10 @@ class CameraGroup(pygame.sprite.Group):
         for sprite in sprites:
             offset_pos = sprite.rect.topleft - self.offset
             self.screen.blit(sprite.image, offset_pos)
+            ### DEBUG
             if debug:
                 if hasattr(sprite, 'hitbox'):
                     if sprite.hitbox:
                         rect_offset_pos = sprite.hitbox.topleft - self.offset
                         draw_hitbox(sprite, self.screen, rect_offset_pos)
+            ### DEBUG END

@@ -56,8 +56,10 @@ class Game():
             self.sprites.update(dt)
             self.sprites.custom_draw(self.player, debug)
             
+            ### DEBUG
             if debug:
-                info = f"Ground: {self.player.movement.ground}"
+                info = f"{self.player.state.name, self.player.frame_idx}"
                 draw_info(info = info, screen = self.screen)
+            ### DEBUG END
             
             pygame.display.update()
