@@ -17,8 +17,8 @@ class Player(pygame.sprite.Sprite):
         self.facing = "right"
 
         self.image = frames[self.state][self.facing][0]
-        self.rect = self.image.get_frect(center = pos)
-        self.prev_rect = self.rect.copy()
+        self.rect = self.image.get_frect(topleft = pos)
+        self.hitbox = self.rect.inflate(-32,-16)
         
         # Components
         self.movement = PlayerMovement(self, collision_sprites)
@@ -36,8 +36,7 @@ class PlayerMovement:
         self.player = player
         self.collision_sprites = collision_sprites
         
-        self.rect = self.player.rect
-        self.prev_rect = self.player.prev_rect
+        self.hitbox = self.player.hitbox
         
         self.speed = Config.PLAYER_RUN_SPEED
         self.direction = vec()
@@ -52,7 +51,7 @@ class PlayerMovement:
         self.state = "idle"
         
     def check_contact(self):
-        ground_rect = pygame.Rect(self.rect.bottomleft, (self.rect.width, 2))
+        ground_rect = pygame.Rect(self.hitbox.bottomleft, (self.hitbox.width, 2))
         # list of rectangles of all collision objects
         collide_rects = [sprite.rect for sprite in self.collision_sprites]
         # rect beneath player rectangle
@@ -75,18 +74,23 @@ class PlayerMovement:
         
     def check_collision(self, axis):
         for sprite in self.collision_sprites:
-            if sprite.rect.colliderect(self.player.rect):
+            if sprite.rect.colliderect(self.hitbox):
+                # Horizontal collision
                 if axis == "h":
-                    if self.rect.left <= sprite.rect.right and self.prev_rect.left >= sprite.prev_rect.right:
-                        self.rect.left = sprite.rect.right
-                    if self.rect.right >= sprite.rect.left and self.prev_rect.right <= sprite.prev_rect.left:
-                        self.rect.right = sprite.rect.left
-                else:
-                    if self.rect.top <= sprite.rect.bottom and self.prev_rect.top >= sprite.prev_rect.bottom:
-                        self.rect.top = sprite.rect.bottom
-                    if self.rect.bottom >= sprite.rect.top and self.prev_rect.bottom <= sprite.prev_rect.top:
-                        self.rect.bottom = sprite.rect.top
-                    # make sure graviy doesn't accumulate during contact
+                    if self.velocity.x > 0:
+                        self.hitbox.right = sprite.rect.left
+                    elif self.velocity.x < 0:
+                        self.hitbox.left = sprite.rect.right
+                        
+                    self.velocity.x = 0
+
+                # Vertical collision
+                elif axis == "v":
+                    if self.velocity.y > 0:
+                        self.hitbox.bottom = sprite.rect.top
+                    elif self.velocity.y < 0:
+                        self.hitbox.top = sprite.rect.bottom
+
                     self.velocity.y = 0
                     
     def states(self):
@@ -123,7 +127,7 @@ class PlayerMovement:
         
         ## horizontal movement logic
         self.velocity.x = self.direction.copy().x * self.speed * dt
-        self.rect.x += self.velocity.x
+        self.hitbox.x += self.velocity.x
         self.check_collision("h")
         
         ## vertical movement
@@ -133,12 +137,14 @@ class PlayerMovement:
         if self.jump and self.ground:
             self.velocity.y = -Config.PLAYER_JUMP_STRENGTH
         
-        self.rect.y += self.velocity.y * dt
+        self.hitbox.y += self.velocity.y * dt
         self.check_collision("v")
         
         self.states()
         self.set_state()
-                         
+        # update player rect according to hitbox movement
+        self.player.rect.center = self.hitbox.center
+                       
 class PlayerAnimation:
     
     def __init__(self, player, frames):
@@ -148,11 +154,19 @@ class PlayerAnimation:
         
         self.animation_speed = Config.ANIMATION_SPEED
         
+        self.prev_state = "idle"
+        self.one_time_states = ["jump", "fall"]
+        
     def animate(self, dt):
         state, facing = self.player.state, self.player.facing
+        image = self.player.image
+        if state == self.prev_state and state in self.one_time_states:
+            pass
+            
+        else:
+            self.frame_idx += self.animation_speed * dt
+            current_frames = self.frames[state][facing]
+            image = current_frames[int(self.frame_idx % len(current_frames))]
         
-        self.frame_idx += self.animation_speed * dt
-        current_frames = self.frames[state][facing]
-        image = current_frames[int(self.frame_idx % len(current_frames))]
-        
+        self.prev_state = state
         self.player.image = image

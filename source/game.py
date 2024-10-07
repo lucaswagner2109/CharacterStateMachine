@@ -1,6 +1,7 @@
 from .config import Config
 from .player import Player
 from .sprites import Tile
+from .camera import CameraGroup
 from .support import import_sprites_folder
 from .debug import draw_info
 
@@ -14,7 +15,7 @@ class Game():
         self.screen = pygame.display.set_mode(Config.WINDOW_SIZE)
         self.clock = pygame.time.Clock()
         
-        self.sprites = pygame.sprite.Group()
+        self.sprites = CameraGroup()
         self.collision_sprites = pygame.sprite.Group()
         
         self.setup()
@@ -51,12 +52,12 @@ class Game():
                     sys.exit()
   
             self.screen.fill(Config.BLACK)
-                    
+            
             self.sprites.update(dt)
-            self.sprites.draw(self.screen)
+            self.sprites.custom_draw(self.player, debug)
             
             if debug:
-                info = f"Facing: {self.player.facing}, State: {self.player.state}"
+                info = f"Ground: {self.player.movement.ground}"
                 draw_info(info = info, screen = self.screen)
             
             pygame.display.update()
