@@ -11,6 +11,3 @@ class Tile(pygame.sprite.Sprite):
         self.image.fill((Config.WHITE))
         self.rect = self.image.get_frect(topleft = pos)
         self.prev_rect = self.rect.copy()
-    
-    def update(self, dt):
-        self.prev_rect = self.rect.copy()

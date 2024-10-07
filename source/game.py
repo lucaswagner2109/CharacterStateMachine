@@ -1,6 +1,8 @@
 from .config import Config
 from .player import Player
 from .sprites import Tile
+from .support import import_sprites_folder
+from .debug import draw_info
 
 import pygame, sys
 
@@ -18,6 +20,7 @@ class Game():
         self.setup()
 
     def setup(self):
+        # setup tiles
         for row_idx, row in enumerate(Config.LAYOUT):
             for col_idx, col in enumerate(row):
                 if col == 1:
@@ -26,6 +29,7 @@ class Game():
                 
                     Tile((x, y), [self.sprites, self.collision_sprites])
         
+        # setup player
         for row_idx, row in enumerate(Config.LAYOUT):
             for col_idx, col in enumerate(row):
                 if col == 2:
@@ -35,13 +39,10 @@ class Game():
                     self.player = Player(
                         pos=(x, y), 
                         groups=self.sprites, 
-                        frames=None,
+                        frames=import_sprites_folder("assets/player"),
                         collision_sprites=self.collision_sprites)
 
     def run(self, debug):
-        if debug:
-            print("Debug mode.")
-        
         while True:
             dt = self.clock.tick(Config.FPS) / 1000
             for event in pygame.event.get():
@@ -53,5 +54,9 @@ class Game():
                     
             self.sprites.update(dt)
             self.sprites.draw(self.screen)
+            
+            if debug:
+                info = f"Facing: {self.player.facing}, State: {self.player.state}"
+                draw_info(info = info, screen = self.screen)
             
             pygame.display.update()

@@ -1,5 +1,5 @@
 from .config import Config
-from .debug import draw_info
+
 
 import pygame
 from pygame.math import Vector2 as vec
@@ -8,32 +8,27 @@ class Player(pygame.sprite.Sprite):
     
     def __init__(self, pos, groups, frames, collision_sprites):
         super().__init__(groups)
-        # Sprite variables                                                 
-        self.sprite_sheet = pygame.image.load("assets/player/idle.png").convert_alpha()
-
-        # Extract the first frame from the sprite sheet
-        self.image = self.sprite_sheet.subsurface(pygame.Rect(0, 0, 48, 48))
-        self.rect = self.image.get_frect(center = pos)
-        self.prev_rect = self.rect.copy()
         
         # Input control
         self.input_disabled = False
         
         # Player state
+        self.state = "idle"    
         self.facing = "right"
-        self.state = "idle"
+
+        self.image = frames[self.state][self.facing][0]
+        self.rect = self.image.get_frect(center = pos)
+        self.prev_rect = self.rect.copy()
         
         # Components
         self.movement = PlayerMovement(self, collision_sprites)
-        self.animation = PlayerAnimation(self)
+        self.animation = PlayerAnimation(self, frames)
 
     def update(self, dt):
         self.prev_rect = self.rect.copy()
         
         self.movement.move(dt)
-        self.animation.animate()
-        
-        draw_info(info = f"Facing: {self.facing}, State: {self.state}", screen = pygame.display.get_surface())
+        self.animation.animate(dt)
     
 class PlayerMovement:
     
@@ -127,7 +122,6 @@ class PlayerMovement:
         self.input()
         
         ## horizontal movement logic
-        
         self.velocity.x = self.direction.copy().x * self.speed * dt
         self.rect.x += self.velocity.x
         self.check_collision("h")
@@ -147,8 +141,18 @@ class PlayerMovement:
                          
 class PlayerAnimation:
     
-    def __init__(self, player):
+    def __init__(self, player, frames):
         self.player = player
+        self.frames = frames
+        self.frame_idx = 0
         
-    def animate(self):
-        pass
+        self.animation_speed = Config.ANIMATION_SPEED
+        
+    def animate(self, dt):
+        state, facing = self.player.state, self.player.facing
+        
+        self.frame_idx += self.animation_speed * dt
+        current_frames = self.frames[state][facing]
+        image = current_frames[int(self.frame_idx % len(current_frames))]
+        
+        self.player.image = image
