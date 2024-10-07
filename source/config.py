@@ -54,7 +54,8 @@ class PlayerState:
 class PlayerStates:
     def __init__(self):
         self.IDLE = PlayerState(name="idle", anim_speed=8, loop=True)
-        self.RUN = PlayerState(name="run", anim_speed=12, loop=True)
-        self.CROUCH = PlayerState(name="crouch", anim_speed=6, loop=True)
-        self.JUMP = PlayerState(name="jump", anim_speed=10, loop=False)
-        self.FALL = PlayerState(name="fall", anim_speed=10, loop=False)
+        self.RUN = PlayerState(name="run", anim_speed=14, loop=True)
+        self.CROUCH_IDLE = PlayerState(name="crouch_idle", anim_speed=8, loop=True)
+        self.CROUCH_WALK = PlayerState(name="crouch_walk", anim_speed=10, loop=True)
+        self.JUMP = PlayerState(name="jump", anim_speed=12, loop=False)
+        self.FALL = PlayerState(name="fall", anim_speed=8, loop=False)

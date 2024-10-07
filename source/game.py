@@ -58,7 +58,7 @@ class Game():
             
             ### DEBUG
             if debug:
-                info = f"{self.player.state.name, self.player.frame_idx}"
+                info = f"State: {self.player.facing}, {self.player.state.name}"
                 draw_info(info = info, screen = self.screen)
             ### DEBUG END
             

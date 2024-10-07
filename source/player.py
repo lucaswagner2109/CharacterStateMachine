@@ -112,7 +112,10 @@ class Player(pygame.sprite.Sprite):
             
         if self.ground:
             if self.crouch:
-                self.state = self.states.CROUCH
+                if self.velocity.x == 0:
+                    self.state = self.states.CROUCH_IDLE
+                else:
+                    self.state = self.states.CROUCH_WALK
             else:
                 if self.direction.x == 0:
                     self.state = self.states.IDLE
@@ -132,7 +135,7 @@ class Player(pygame.sprite.Sprite):
             if self.prev_state != self.state:
                 self.frame_idx = 0
             else:
-                self.frame_idx = self.frame_idx + self.state.anim_speed * dt if self.frame_idx <= len(current_frames)-1 else self.frame_idx
+                self.frame_idx = self.frame_idx + self.state.anim_speed * dt if self.frame_idx <= len(current_frames) - 1 else self.frame_idx
                 
         self.image = current_frames[int(self.frame_idx % len(current_frames))]
         self.prev_state = self.state
