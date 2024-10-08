@@ -112,16 +112,19 @@ class Player(pygame.sprite.Sprite):
             
         if self.ground:
             if self.crouch:
+                self.speed = Config.PLAYER_CROUCH_SPEED
                 if self.velocity.x == 0:
                     self.state = self.states.CROUCH_IDLE
                 else:
-                    self.state = self.states.CROUCH_WALK
+                    self.state = self.states.CROUCH_WALK 
             else:
+                self.speed = Config.PLAYER_RUN_SPEED
                 if self.direction.x == 0:
                     self.state = self.states.IDLE
                 else:
                     self.state = self.states.RUN
         elif not self.ground:
+            self.speed = Config.PLAYER_RUN_SPEED
             if self.velocity.y <= 0:
                 self.state = self.states.JUMP
             elif self.velocity.y > 0:

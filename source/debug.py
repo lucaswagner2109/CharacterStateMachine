@@ -8,7 +8,7 @@ def draw_info(info, screen):
     info_rect = info_text.get_frect(topleft = (12, 12))
     screen.blit(info_text, info_rect)
     
-def draw_hitbox(sprite, screen, pos):
-    surf = pygame.Surface(sprite.hitbox.size, pygame.SRCALPHA)
+def draw_hitbox(screen, pos, size):
+    surf = pygame.Surface(size, pygame.SRCALPHA)
     pygame.draw.rect(surf, Config.RED + (128,), surf.get_rect(), 1)
     screen.blit(surf, pos)
